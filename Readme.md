@@ -3,6 +3,8 @@ Big Brother is watching your docker container images for available updates.
 
 It automatically compares the cryptographic digests (SHA256) of your local Docker images against the remote registries to check for upstream changes so you don't have to track image updates manually.
 
+This project is intended to be used in homelabs, media centers, local dev environments, and similar. I do not recommend using Big Brother in a commercial or production environment
+
 ## Installation and usage
 ```bash
 git clone https://github.com/AnhKhoiTRUONG/big-brother.git
