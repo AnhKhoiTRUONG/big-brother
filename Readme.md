@@ -5,9 +5,17 @@ It automatically compares the cryptographic digests (SHA256) of your local Docke
 
 ## Installation and usage
 ```bash
-git clone
+git clone https://github.com/AnhKhoiTRUONG/big-brother.git
 cd big-brother
+```
 
+You need to put your [Dockerhub](https://hub.docker.com/) username and [personal access token](https://docs.docker.com/security/access-tokens/) in `.env` in the root directory
+```conf
+identifier=
+secret=
+```
+
+```bash
 ### Run the project
 cargo run
 ```
@@ -36,6 +44,4 @@ sudo usermod -aG docker $USER
 # Apply the new group (or log out and log back in)
 newgrp docker
 ```
-```
 
-```
