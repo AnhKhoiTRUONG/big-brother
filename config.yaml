@@ -1,3 +1,0 @@
-watch:
-  schedule: "30 * * * * *"
-  timezone: Europe/Paris
