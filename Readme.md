@@ -40,6 +40,7 @@ sec   min   hour   day of month   month   day of week
 If the `config.yaml` is not provided, the default config like above will be used
 ### Discord notification
 More details for how to get discord webhook url [here](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)
+
 To have discord notification, we can add these to the `config.yaml` file
 ```yaml
 discord:
