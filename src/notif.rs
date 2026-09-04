@@ -30,7 +30,7 @@ impl<'a> DiscordNotif<'a> {
     pub async fn send_discord_notif(&'a self, webhook_url: &str) -> Result<(), String> {
         let client = WebhookClient::new(webhook_url);
 
-        // let logo_url = "https://raw.githubusercontent.com/crazy-max/diun/master/.res/diun.png";
+        // let logo_url = "https://idkwhat";
 
         // 1. Text displayed above the embed box
 

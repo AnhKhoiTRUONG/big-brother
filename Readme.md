@@ -5,6 +5,8 @@ It automatically compares the cryptographic digests (SHA256) of your local Docke
 
 This project is intended to be used in homelabs, media centers, local dev environments, and similar. I do not recommend using Big Brother in a commercial or production environment
 
+This project is inspired by [Diun](https://github.com/crazy-max/diun)
+
 ## Installation and usage
 ### Prerequisites
 - [Rust and Cargo](https://rust-lang.org/tools/install/) installed
