@@ -1,9 +1,15 @@
+use crate::notif::{self};
+use crate::parse_yaml::DiscordConfig;
 use bollard::Docker;
 use bollard::query_parameters::ListImagesOptionsBuilder;
+use chrono_tz::Tz;
 use oci_client::secrets::RegistryAuth;
 use oci_client::{ParseError, Reference};
 
-pub async fn compare_all_digest() -> Result<(), String> {
+pub async fn compare_all_digest(
+    tz: &Tz,
+    maybe_discord_config: &Option<DiscordConfig>,
+) -> Result<(), String> {
     let docker = Docker::connect_with_local_defaults().map_err(|e| e.to_string())?;
     let options = ListImagesOptionsBuilder::default().digests(true).build();
     let images = &docker
@@ -32,7 +38,19 @@ pub async fn compare_all_digest() -> Result<(), String> {
             let local_digest = repo_digest.split("@").collect::<Vec<_>>()[1];
 
             if local_digest != remote_digest {
-                println!("Need update on {tag:?}");
+                if let Some(discord_conf) = maybe_discord_config {
+                    let created = notif::get_current_time(tz);
+                    let discord_notif =
+                        notif::DiscordNotif::new(tag, &created, &remote_digest, "hehe");
+                    notif::DiscordNotif::send_discord_notif(
+                        &discord_notif,
+                        &discord_conf.webhook_url,
+                    )
+                    .await
+                    .unwrap();
+                } else {
+                    println!("Need update on {tag:?}");
+                }
             }
         }
     }

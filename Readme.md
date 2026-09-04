@@ -5,8 +5,6 @@ It automatically compares the cryptographic digests (SHA256) of your local Docke
 
 This project is intended to be used in homelabs, media centers, local dev environments, and similar. I do not recommend using Big Brother in a commercial or production environment
 
-
-
 ## Installation and usage
 ### Prerequisites
 - [Rust and Cargo](https://rust-lang.org/tools/install/) installed
@@ -40,15 +38,22 @@ sec   min   hour   day of month   month   day of week
 *     *     *      *              *       *
 ```
 If the `config.yaml` is not provided, the default config like above will be used
-
+### Discord notification
+More details for how to get discord webhook url [here](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)
+To have discord notification, we can add these to the `config.yaml` file
+```yaml
+discord:
+  webhook_url: "Your webhook url"
+```
 ## Features
 - Global Scan: Automatically checks every container running on your local machine.
 - Digest Comparison: Pulls remote manifests to accurately compare local and upstream digests.
 - Now fully support every registry.
 - Scheduling cron job via `config.yaml` file
+- Notifications via Discord
 ## Coming soon
 - Web Dashboard: A lightweight local UI to track your container images visually.
-- Notifications: Automated push notifications via Discord, Mail, and more.
+- Notifications: Automated push notifications via Mail, and more.
 - Configuration file for each service
 - Integration into Docker with Dockerfile
 

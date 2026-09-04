@@ -17,6 +17,7 @@ const DEFAULT_TZ: &str = "UTC";
 #[derive(Debug, Deserialize)]
 pub struct Config {
     pub watch: Watch,
+    pub discord: Option<DiscordConfig>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -25,10 +26,16 @@ pub struct Watch {
     pub timezone: String,
 }
 
+#[derive(Debug, Deserialize, Clone)]
+pub struct DiscordConfig {
+    pub webhook_url: String,
+}
+
 impl Config {
     pub fn default() -> Self {
         Self {
             watch: Watch::default(),
+            discord: None,
         }
     }
 
