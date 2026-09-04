@@ -1,103 +1,58 @@
-use crate::config::{self, Config};
-use anyhow::{Context, Result};
-use serde::{Deserialize, Serialize};
+use crate::notif::{self};
+use crate::parse_yaml::DiscordConfig;
+use bollard::Docker;
+use bollard::query_parameters::ListImagesOptionsBuilder;
+use chrono_tz::Tz;
+use oci_client::secrets::RegistryAuth;
+use oci_client::{ParseError, Reference};
 
-#[derive(Deserialize, Serialize)]
-pub struct AcessTokenBody<'a> {
-    pub identifier: &'a str,
-    pub secret: &'a str,
-}
+pub async fn compare_all_digest(
+    tz: &Tz,
+    maybe_discord_config: &Option<DiscordConfig>,
+) -> Result<(), String> {
+    let docker = Docker::connect_with_local_defaults().map_err(|e| e.to_string())?;
+    let options = ListImagesOptionsBuilder::default().digests(true).build();
+    let images = &docker
+        .list_images(Some(options))
+        .await
+        .map_err(|e| e.to_string())?;
 
-#[derive(Deserialize, Debug)]
-pub struct AcessToken {
-    pub access_token: String,
-}
+    let client = oci_client::Client::default();
+    for image in images {
+        let tags_list = &image.repo_tags;
+        if !tags_list.is_empty() {
+            let tag = &tags_list[0];
+            let repo_digest_list = &image.repo_digests;
+            let repo_digest = &repo_digest_list[0]; //need to think about the case that
+            //repo_digests is empty, normally wont happen
+            let reference: &Reference = &tag.parse().map_err(|e: ParseError| e.to_string())?; //error here need to handle
 
-// #[derive(Deserialize, Debug)]
-// pub struct RepoImages {
-//     pub digest: String,
-// }
+            let remote_digest = oci_client::Client::fetch_manifest_digest(
+                &client,
+                reference,
+                &RegistryAuth::Anonymous,
+            )
+            .await
+            .map_err(|e| e.to_string())?;
 
-#[derive(Deserialize)]
-pub struct RepoTag {
-    // pub images: Vec<RepoImages>,
-    pub digest: String,
-}
+            let local_digest = repo_digest.split("@").collect::<Vec<_>>()[1];
 
-// this struct is to take the namespaces, repo, server and tags
-// We gonna check if its ghrc or docker hub later as well
-#[derive(Deserialize, Debug)]
-pub struct ApiCall<'a> {
-    pub namespace: &'a str,
-    pub repo: &'a str,
-    pub tag: &'a str,
-}
-
-// Parse the repo tag into information that we need
-impl<'a> ApiCall<'a> {
-    pub fn parse(input: &'a str) -> Self {
-        let (image_part, tag) = input.split_once(':').unwrap_or((input, "latest"));
-
-        let (namespace, repo) = image_part
-            .split_once('/')
-            .unwrap_or(("library", image_part));
-
-        Self {
-            namespace,
-            repo,
-            tag,
+            if local_digest != remote_digest {
+                if let Some(discord_conf) = maybe_discord_config {
+                    let created = notif::get_current_time(tz);
+                    let discord_notif =
+                        notif::DiscordNotif::new(tag, &created, &remote_digest, "hehe");
+                    notif::DiscordNotif::send_discord_notif(
+                        &discord_notif,
+                        &discord_conf.webhook_url,
+                    )
+                    .await
+                    .unwrap();
+                } else {
+                    println!("Need update on {tag:?}");
+                }
+            }
         }
     }
-}
-
-//Return access token
-pub async fn get_access_token_dockerhub(config: &config::Config) -> Result<String> {
-    let content = format!(
-        "{{\"identifier\": \"{}\", \"secret\": \"{}\"}}",
-        Config::identifier(config),
-        Config::secret(config)
-    );
-
-    let content_str = content.as_str();
-
-    let content_json: AcessTokenBody = serde_json::from_str(content_str)
-        .context("Failed to parse the identifier and secret to JSON")?;
-
-    let client = reqwest::Client::new();
-    let res = client
-        .post("https://hub.docker.com/v2/auth/token")
-        .json(&content_json)
-        .send()
-        .await
-        .context("Error when create access token")?;
-
-    let data = res
-        .json::<AcessToken>()
-        .await
-        .context("Failed to parse the JSON token from Dokcer")?;
-
-    Ok(data.access_token)
-}
-
-// key is from the get_access_token_dockerhub
-// Return digest
-pub async fn get_disgest<'a>(repo: &ApiCall<'a>, key: &String) -> Result<String> {
-    let client = reqwest::Client::new();
-
-    let res = client
-        .get(format!(
-            "https://hub.docker.com/v2/namespaces/{}/repositories/{}/tags/{}",
-            repo.namespace, repo.repo, repo.tag
-        ))
-        .bearer_auth(key)
-        .send()
-        .await
-        .context("Error when create access token")?;
-
-    let data = res
-        .json::<RepoTag>()
-        .await
-        .context("Failed to parse the JSON token from Dokcer")?;
-
-    Ok(data.digest)
+    Ok(())
 }
