@@ -27,13 +27,19 @@ pub async fn compare_all_digest(
             //repo_digests is empty, normally wont happen
             let reference: &Reference = &tag.parse().map_err(|e: ParseError| e.to_string())?; //error here need to handle
 
-            let remote_digest = oci_client::Client::fetch_manifest_digest(
+            let remote_digest = match oci_client::Client::fetch_manifest_digest(
                 &client,
                 reference,
                 &RegistryAuth::Anonymous,
             )
             .await
-            .map_err(|e| e.to_string())?;
+            {
+                Ok(digest) => digest,
+                Err(e) => {
+                    eprintln!("{e:?}");
+                    continue;
+                }
+            };
 
             let local_digest = repo_digest.split("@").collect::<Vec<_>>()[1];
 
