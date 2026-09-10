@@ -3,14 +3,18 @@ use crate::parse_yaml::DiscordConfig;
 use bollard::Docker;
 use bollard::query_parameters::ListImagesOptionsBuilder;
 use chrono_tz::Tz;
+use discord_webhook2::error::DiscordWebhookError;
 use oci_client::secrets::RegistryAuth;
 use oci_client::{ParseError, Reference};
-use std::fmt;
+use std::fmt::{self};
 
+//Maybe put the error handle in another file and use thiserror file
+//but now im kinda happy with it
 #[derive(Debug)]
 pub enum AccessError {
-    DockerError(bollard::errors::Error),
-    OciError(ParseError),
+    Docker(bollard::errors::Error),
+    Oci(ParseError),
+    Discord(DiscordWebhookError),
 }
 
 impl fmt::Display for AccessError {
@@ -18,21 +22,28 @@ impl fmt::Display for AccessError {
         match *self {
             // Both underlying errors already impl `Display`, so we defer to
             // their implementations.
-            AccessError::DockerError(ref err) => write!(f, "Docker connectin error: {}", err),
-            AccessError::OciError(ref err) => write!(f, "Remote repo error: {}", err),
+            AccessError::Docker(ref err) => write!(f, "Docker connectin error: {}", err),
+            AccessError::Oci(ref err) => write!(f, "Remote repo error: {}", err),
+            AccessError::Discord(ref err) => write!(f, "Discord Webhook Error: {}", err),
         }
     }
 }
 
 impl From<bollard::errors::Error> for AccessError {
     fn from(err: bollard::errors::Error) -> AccessError {
-        AccessError::DockerError(err)
+        AccessError::Docker(err)
     }
 }
 
 impl From<ParseError> for AccessError {
     fn from(err: ParseError) -> AccessError {
-        AccessError::OciError(err)
+        AccessError::Oci(err)
+    }
+}
+
+impl From<DiscordWebhookError> for AccessError {
+    fn from(err: DiscordWebhookError) -> AccessError {
+        AccessError::Discord(err)
     }
 }
 
@@ -42,7 +53,9 @@ pub async fn compare_all_digest(
 ) -> Result<(), AccessError> {
     let docker = Docker::connect_with_local_defaults()?;
     let options = ListImagesOptionsBuilder::default().digests(true).build();
-    let images = &docker.list_images(Some(options)).await?;
+
+    //seems like unwrap is reasonable here because when i can't connect to docker it need to be stop
+    let images = &docker.list_images(Some(options)).await.unwrap();
 
     let client = oci_client::Client::default();
     for image in images {
@@ -53,6 +66,7 @@ pub async fn compare_all_digest(
             let repo_digest = &repo_digest_list[0]; //need to think about the case that repo_digests is empty, normally wont happen
             let reference: &Reference = &tag.parse()?; //error here need to handle
 
+            // Can I handle the error like this? Should i make a general thing?
             let remote_digest = match oci_client::Client::fetch_manifest_digest(
                 &client,
                 reference,
@@ -62,7 +76,7 @@ pub async fn compare_all_digest(
             {
                 Ok(digest) => digest,
                 Err(e) => {
-                    eprintln!("{e:?}");
+                    eprintln!("Your remote repo link seems not right {e}");
                     continue;
                 }
             };
@@ -78,8 +92,7 @@ pub async fn compare_all_digest(
                         &discord_notif,
                         &discord_conf.webhook_url,
                     )
-                    .await
-                    .unwrap();
+                    .await?;
                 } else {
                     println!("Need update on {tag:?}");
                 }

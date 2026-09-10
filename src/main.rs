@@ -33,7 +33,7 @@ async fn main() {
                         match access::compare_all_digest(&tz, &value).await {
                             Ok(_) => {}
                             Err(e) => {
-                                eprintln!("{e}")
+                                eprintln!("{}", e)
                             }
                         }
 

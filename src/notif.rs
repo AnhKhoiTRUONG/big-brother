@@ -1,7 +1,9 @@
+use crate::access::AccessError;
 use chrono::Utc;
 use chrono_tz::Tz;
 use discord_webhook2::message::Message;
 use discord_webhook2::webhook::DiscordWebhook;
+
 pub struct DiscordNotif<'a> {
     image_tag: &'a str, // e.g. "docker.io/idk/idk:latest"
     // hostname: &str, // e.g. "pc-hades"
@@ -28,8 +30,8 @@ impl<'a> DiscordNotif<'a> {
         }
     }
 
-    pub async fn send_discord_notif(&'a self, webhook_url: &str) -> Result<(), String> {
-        let client = DiscordWebhook::new(webhook_url).unwrap();
+    pub async fn send_discord_notif(&'a self, webhook_url: &str) -> Result<(), AccessError> {
+        let client = DiscordWebhook::new(webhook_url)?;
 
         let content = format!("Docker tag {}  is available.", self.image_tag);
 
@@ -49,8 +51,7 @@ impl<'a> DiscordNotif<'a> {
                     // .color(0x00BBFF)
                 })
             }))
-            .await
-            .map_err(|e| e.to_string())?;
+            .await?;
 
         Ok(())
     }

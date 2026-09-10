@@ -26,6 +26,19 @@ cd big-brother
 ### Run the project
 cargo run
 ```
+### Docker compose
+```yml
+services:
+  docker_notif:
+    build: .
+    image: anhkhoitruong/docker_notif:latest
+    container_name: docker_notif
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Mounts the local config.yaml into the container at /app/config.yaml
+      - ./config.yaml:/app/config.yaml:ro
+```
 ### Scheduling
 We can schedule Big-Brother to check update by configurate the `config.yaml`. The format will be
 ```yaml
