@@ -8,24 +8,6 @@ This project is intended to be used in homelabs, media centers, local dev enviro
 This project is inspired by [Diun](https://github.com/crazy-max/diun)
 
 ## Installation and usage
-### Prerequisites
-- [Rust and Cargo](https://rust-lang.org/tools/install/) installed
-### Docker Socket Permissions
-Big Brother uses the `/var/run/docker.sock` to scan your local containers. Ensure that your user is part of the docker group:
-```bash
-# Add your user to the docker group
-sudo usermod -aG docker $USER
-
-# Apply the new group (or log out and log back in)
-newgrp docker
-```
-
-```bash
-git clone https://github.com/AnhKhoiTRUONG/big-brother.git
-cd big-brother
-### Run the project
-cargo run
-```
 ### Docker compose
 ```yml
 services:
