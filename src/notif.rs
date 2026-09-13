@@ -6,7 +6,7 @@ use discord_webhook2::webhook::DiscordWebhook;
 
 pub struct DiscordNotif<'a> {
     image_tag: &'a str, // e.g. "docker.io/idk/idk:latest"
-    // hostname: &str, // e.g. "pc-hades"
+    // hostname: &str, // e.g. "pc-idkwhat"
     created: &'a str, // e.g. "Aug 30, 2021 13:26:31 UTC"
     digest: &'a str,  // e.g. "sha256:866c12d..."
     // platform: &str, // e.g. "linux/amd64"
@@ -33,7 +33,7 @@ impl<'a> DiscordNotif<'a> {
     pub async fn send_discord_notif(&'a self, webhook_url: &str) -> Result<(), AccessError> {
         let client = DiscordWebhook::new(webhook_url)?;
 
-        let content = format!("Docker tag {}  is available.", self.image_tag);
+        let content = format!("Docker tag {} is available.", self.image_tag);
 
         client
             .send(&Message::new(|message| {
@@ -47,7 +47,7 @@ impl<'a> DiscordNotif<'a> {
                         .field(|field| field.name("Created").value(self.created))
                         .field(|field| field.name("Digest").value(self.digest))
                         .field(|field| field.name("HubLink").value(self.hub_link))
-                        .field(|field| field.value("Value 3"))
+                    // .field(|field| field.value("Value 3"))
                     // .color(0x00BBFF)
                 })
             }))

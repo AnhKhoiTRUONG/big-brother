@@ -466,6 +466,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "docker-image"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f40ed901b8f2157bafce6e96f39217f7b1a4af32d84266d251ed7c22ce001f0b"
+dependencies = [
+ "lazy_static",
+ "regex",
+]
+
+[[package]]
 name = "docker_notif"
 version = "0.1.0"
 dependencies = [
@@ -474,6 +484,7 @@ dependencies = [
  "chrono",
  "chrono-tz",
  "discord-webhook2",
+ "docker-image",
  "oci-client",
  "oci-distribution",
  "serde",
