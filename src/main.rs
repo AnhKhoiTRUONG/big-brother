@@ -11,7 +11,7 @@ use crate::parse_yaml::Config;
 
 #[tokio::main]
 async fn main() {
-    //If the config is not gud, we use the default config
+    // If the config is not gud, we use the default config
     let config = parse_yaml::Config::parse_yaml().unwrap_or_else(|e| {
         eprintln!("Yaml parsing error, falling back to default config: {e}");
         Config::default()
@@ -33,7 +33,7 @@ async fn main() {
                         match access::compare_all_digest(&tz, &value).await {
                             Ok(_) => {}
                             Err(e) => {
-                                eprintln!("{e}")
+                                eprintln!("{}", e)
                             }
                         }
 
@@ -41,7 +41,7 @@ async fn main() {
                         let next_tick = l.next_tick_for_job(uuid).await;
                         match next_tick {
                             Ok(Some(ts)) => println!("Next time for job is {:?}", ts),
-                            _ => println!("Could not get next tick"),
+                            _ => eprintln!("Could not get next tick"),
                         }
                     }
                 })
@@ -58,7 +58,7 @@ async fn main() {
     sched.start().await.expect("Failed to start job");
     println!("Scheduler started.");
 
-    // 3. Prevent the main function from exiting
+    // Prevent the main function from exiting
     // A simple infinite loop keeps the Tokio runtime alive
     loop {
         tokio::time::sleep(Duration::from_secs(60)).await;

@@ -41,7 +41,6 @@ impl Config {
 
     pub fn parse_yaml() -> Result<Self, String> {
         let contents = fs::read_to_string("config.yaml").map_err(|e| e.to_string())?;
-
         serde_saphyr::from_str(contents.as_str()).map_err(|e| e.to_string())
     }
 }

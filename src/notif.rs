@@ -1,9 +1,12 @@
+use crate::access::AccessError;
 use chrono::Utc;
 use chrono_tz::Tz;
-use webhook::client::WebhookClient;
+use discord_webhook2::message::Message;
+use discord_webhook2::webhook::DiscordWebhook;
+
 pub struct DiscordNotif<'a> {
     image_tag: &'a str, // e.g. "docker.io/idk/idk:latest"
-    // hostname: &str, // e.g. "pc-hades"
+    // hostname: &str, // e.g. "pc-idkwhat"
     created: &'a str, // e.g. "Aug 30, 2021 13:26:31 UTC"
     digest: &'a str,  // e.g. "sha256:866c12d..."
     // platform: &str, // e.g. "linux/amd64"
@@ -27,36 +30,28 @@ impl<'a> DiscordNotif<'a> {
         }
     }
 
-    pub async fn send_discord_notif(&'a self, webhook_url: &str) -> Result<(), String> {
-        let client = WebhookClient::new(webhook_url);
+    pub async fn send_discord_notif(&'a self, webhook_url: &str) -> Result<(), AccessError> {
+        let client = DiscordWebhook::new(webhook_url)?;
 
-        // let logo_url = "https://idkwhat";
-
-        // 1. Text displayed above the embed box
-
-        let content = format!("Docker tag {}  is available.", self.image_tag);
-
-        // 2. Build and send the payload
+        let content = format!("Docker tag {} is available.", self.image_tag);
 
         client
-            .send(|message| {
-                message
-                    .username("Small Brother")
-                    .content(&content)
-                    .embed(|embed| {
-                        embed
-                            // Header at the top of the card
-                            .author("Big Brother", None, None)
-                            // Key-value rows (name, value, inline = false)
-                            .field("Created", self.created, false)
-                            .field("Digest", self.digest, false)
-                            .field("HubLink", self.hub_link, false)
-                            // Small text at the very bottom
-                            .footer("Big Brother is watching you", None)
-                    })
-            })
-            .await
-            .map_err(|e| e.to_string())?;
+            .send(&Message::new(|message| {
+                message.embed(|embed| {
+                    embed
+                        .title("Docker Notif")
+                        .description(content)
+                        .url("https://example.com")
+                        .footer(|footer| footer.text("Big Brother is watching you"))
+                        .author(|author| author.name("Big Brother"))
+                        .field(|field| field.name("Created").value(self.created))
+                        .field(|field| field.name("Digest").value(self.digest))
+                        .field(|field| field.name("HubLink").value(self.hub_link))
+                    // .field(|field| field.value("Value 3"))
+                    // .color(0x00BBFF)
+                })
+            }))
+            .await?;
 
         Ok(())
     }
