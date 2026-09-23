@@ -13,8 +13,8 @@ This project is inspired by [Diun](https://github.com/crazy-max/diun)
 services:
   docker_notif:
     build: .
-    image: anhkhoitruong/docker_notif:latest
-    container_name: docker_notif
+    image: anhkhoitruong/big-brother:latest
+    container_name: big-brother
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -26,7 +26,7 @@ We can schedule Big-Brother to check update by configurate the `config.yaml`. Th
 ```yaml
 # This means check every 6h
 watch:
-  schedule: "* */6 * * * *"
+  schedule: "* * */6 * * *"
   timezone: Europe/Paris
 ```
 The cron format is:
